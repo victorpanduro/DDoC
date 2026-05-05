@@ -1,0 +1,8 @@
+private/
+.env
+tmp/
+__pycache__/
+*.pyc
+.venv/
+test/
+.vscode/
