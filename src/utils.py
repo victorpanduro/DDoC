@@ -2,8 +2,8 @@ from datetime import datetime, date
 from io import BytesIO
 from pathlib import Path
 import re
-import dotenv
 import os
+import dotenv
 import requests
 from PIL import Image
 
@@ -27,7 +27,7 @@ def use_regex_and_datetime(input_text: str) -> bool:
         return date(1995, 6, 16) <= parsed_date <= date.today()
     except ValueError:
         return False
-    
+
 
 def get_api_key() -> str:
     dotenv.load_dotenv(ENV_PATH)
@@ -37,12 +37,13 @@ def get_api_key() -> str:
 def save_api_key(key: str) -> None:
     if not key.strip():
         raise ValueError("API key cannot be empty.")
-    
+
     try:
         PRIVATE_DIR.mkdir(parents = True, exist_ok = True)
         ENV_PATH.write_text(f"NASA_API_KEY={key}\n", encoding = "utf-8")
     except OSError as ex:
-        raise ValueError("Environment error", "Could not open .env file and save API key as varibale.") from ex
+        raise ValueError("Environment error",
+                         "Could not open .env file and save API key as varibale.") from ex
 
 
 def fetch_and_parse_response_to_data(key: str | None, date: str | None = None) -> Data | None:
@@ -55,20 +56,21 @@ def fetch_and_parse_response_to_data(key: str | None, date: str | None = None) -
     }
     if date:
         params["date"] = date
-    
+
     try:
         response = requests.get(
             "https://api.nasa.gov/planetary/apod",
             params = params,
-            timeout = 30, 
+            timeout = 30,
             allow_redirects = True
         )
         response.raise_for_status()
     except requests.exceptions.HTTPError as ex:
-        raise RuntimeError(f"NASA API returned HTTP error code {response.status_code}.", str(ex)) from ex
+        raise RuntimeError(f"NASA API returned HTTP error code {response.status_code}.",
+                           str(ex)) from ex
     except requests.exceptions.RequestException as ex:
         raise RuntimeError("Could not contact NASA APOD API.") from ex
-    
+
     try:
         data = response.json()
     except requests.exceptions.JSONDecodeError as ex:
@@ -87,10 +89,10 @@ def fetch_and_parse_response_to_data(key: str | None, date: str | None = None) -
 def fetch_and_save_image(data: Data) -> Path | None:
     if data["media_type"] != "image":
         return None
-    
+
     if not data["url"]:
         raise ValueError("No image URL was returned by the API.")
-    
+
     TMP_IMAGE_DIR.mkdir(parents = True, exist_ok = True)
     png_path = TMP_IMAGE_DIR / f"{data['date']}.png"
 

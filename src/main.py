@@ -1,4 +1,4 @@
-import ctypes 
+import ctypes
 from gui import GUI
 
 def main():
@@ -6,5 +6,5 @@ def main():
 
 if __name__ == "__main__":
     if hasattr(ctypes, "windll"):
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Daily Dose of Cosmos") # Set the taskbar icon of the application
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Daily Dose of Cosmos")
     main()

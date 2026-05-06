@@ -1,31 +1,28 @@
-from PIL import Image, ImageTk
 import tkinter as tk
 from tkinter import ttk, StringVar, messagebox
+import webbrowser
+from PIL import Image, ImageTk
 import utils
 from utils import Data
-import webbrowser
 
 class GUI:
 
     def __init__(self):
         self.data: Data = {}
         utils.clear_tmp_images()
-        
-        # Create the main window
+
         self.root = tk.Tk()
         self.root.config(background = "black")
-        self.root.title("Daily Dose of Cosmos") 
+        self.root.title("Daily Dose of Cosmos")
         self.root.focus_set()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.icon_photo = ImageTk.PhotoImage(Image.open(utils.ICON_PATH)) 
+        self.icon_photo = ImageTk.PhotoImage(Image.open(utils.ICON_PATH))
         self.root.iconphoto(True, self.icon_photo)
 
-        # Variables
         self.api_key_var = StringVar(value = utils.get_api_key())
         self.date_entry_var = StringVar(value = "")
 
-        # --- Style ---
         self.style = ttk.Style(self.root)
         self.style.theme_use("clam")
 
@@ -42,93 +39,78 @@ class GUI:
         self.style.configure("apod.TEntry",
             background = "black",
             foreground = "black",
-            padding = 3,
-            borderwidth = 0
+            padding = 3
         )
-        # --- ---
-        
-        # Widgets
-        # --- Header ---
+
         self.header = ttk.Label(
-            self.root, 
+            self.root,
             text = "Ready for your Daily Dose of Cosmos?",
             font = ("Arial", 14, "bold"),
             foreground = "white",
             background = "black",
         )
         self.header.pack(padx = 20, pady = (50, 20))
-        # --- ---
 
-        # --- Frame ---
         self.frame = tk.Frame(
             self.root,
             background = "black"
         )
         self.frame.pack(padx = 20, pady = 20, ipadx = 20, ipady = 20)
-        # --- --- 
 
-        # --- Key entry ---
         self.api_key_entry_label = ttk.Label(
-            self.frame, 
-            text = "Enter your NASA API key:", 
-            foreground = "white", 
+            self.frame,
+            text = "Enter your NASA API key:",
+            foreground = "white",
             background = "black"
         )
         self.api_key_entry_label.grid(row = 0, column = 0, padx = 10, pady = 5)
 
         self.api_key_entry = ttk.Entry(
-            self.frame, 
-            textvariable = self.api_key_var, 
+            self.frame,
+            textvariable = self.api_key_var,
             font = ("Arial", 10),
             width = 45,
             style = "TEntry",
-            justify = "center",
-            validate = "key"
+            justify = "center"
         )
         self.api_key_entry.grid(row = 1, column = 0, padx = 10, pady = 5)
-        # --- ---
 
-        # --- Fetch button ---
         self.fetch_button = ttk.Button(
-            self.frame, 
-            text = "Fetch APOD", 
+            self.frame,
+            text = "Fetch APOD",
             command = self.on_fetch_click,
             style = "apod.TButton"
         )
         self.fetch_button.grid(row = 0, column = 2, rowspan = 2, padx = 20, pady = 10)
-        # --- ---
 
-        # --- Date entry ---
         self.date_entry_label = ttk.Label(
-            self.frame, 
-            text = "Enter date (YYYY-MM-DD):", 
-            font = ("Arial", 10), 
-            background = "black", 
+            self.frame,
+            text = "Enter date (YYYY-MM-DD):",
+            font = ("Arial", 10),
+            background = "black",
             foreground = "white",
         )
         self.date_entry_label.grid(row = 0, column = 1, padx = 10, pady = 5)
 
         self.date_entry = ttk.Entry(
-            self.frame, 
-            textvariable = self.date_entry_var, 
+            self.frame,
+            textvariable = self.date_entry_var,
             font = ("Arial", 10),
             width = 15,
             style = "TEntry",
             justify = "center",
-
         )
         self.date_entry.grid(row = 1, column = 1, padx = 10, pady = 5)
-        # --- ---
 
-        self.root.mainloop()  # Start the event loop
+        self.root.mainloop()
 
 
     def on_close(self):
         utils.clear_tmp_images()
         self.root.destroy()
-    
 
-    def on_fetch_click(self): 
+
+    def on_fetch_click(self):
         key = self.api_key_var.get().strip()
         if not key:
             messagebox.showerror("Missing API key", "Please enter your NASA API key.")
@@ -138,24 +120,24 @@ class GUI:
         date = self.date_entry_var.get().strip()
         if not date:
             messagebox.showinfo("Missing date", "APOD will fetch the picture for today.")
-        elif utils.use_regex_and_datetime(date) == False:
+        elif utils.use_regex_and_datetime(date) is False:
             messagebox.showerror(
-                "Error", 
+                "Error",
                 "Please input a valid date in the format YYYY-MM-DD from 1995-06-16 until today."
             )
             return
-        
+
         if not self.data or date != self.data["date"]:
             try:
                 self.data = utils.fetch_and_parse_response_to_data(key, date)
-                if self.data == None or not self.data:
+                if self.data is None or not self.data:
                     return
             except (ValueError, RuntimeError) as ex:
                 messagebox.showerror("Error", str(ex))
-                return 
-            
+                return
+
             self.open_apod_window(self.data)
-    
+
 
     def resize_image(self, image_canvas, image_state, _event = None):
         original_image = image_state["original"]
@@ -192,7 +174,6 @@ class GUI:
         apod_window.config(background = "black")
         is_image = data["media_type"] == "image"
 
-        # --- Title ---
         title_label = ttk.Label(
             apod_window,
             text = data["title"],
@@ -202,7 +183,6 @@ class GUI:
         )
         title_label.pack(padx = 20, pady = (20, 5))
 
-        # --- Date ---
         date_label = ttk.Label(
             apod_window,
             text = data["date"],
@@ -212,7 +192,6 @@ class GUI:
         )
         date_label.pack(padx = 20, pady = 5)
 
-        # --- Copyright ---
         copyright_label = ttk.Label(
             apod_window,
             text = f'Credit/Copyright: {data["copyright"]}',
@@ -225,10 +204,10 @@ class GUI:
         if is_image:
             image_state = {"original": None, "photo": None}
             apod_window.state("zoomed")
-            # --- Image canvas ---
+
             image_canvas = tk.Canvas(
                 apod_window,
-                background = "black", 
+                background = "black",
                 highlightthickness = 0
             )
             image_canvas.pack(fill = "both", expand = True, padx = 10, pady = 10)
@@ -236,8 +215,7 @@ class GUI:
                 "<Configure>",
                 lambda event: self.resize_image(image_canvas, image_state, event)
             )
-        
-        # --- Explanation ---
+
         explanation_text = tk.Text(
             apod_window,
             wrap = "word",
@@ -287,7 +265,8 @@ class GUI:
                 open_video_button.pack(before = explanation_text, padx = 20, pady = 10)
 
             else:
-                messagebox.showinfo("Unsupported media type", f"Cannot display media type: {data['media_type']}")
+                messagebox.showinfo("Unsupported media type",
+                                    f"Cannot display media type: {data['media_type']}")
 
         except ValueError as ex:
             messagebox.showerror("Image error", str(ex))
