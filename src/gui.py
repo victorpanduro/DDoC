@@ -24,8 +24,6 @@ class GUI:
         # Variables
         self.api_key_var = StringVar(value = utils.get_api_key())
         self.date_entry_var = StringVar(value = "")
-        self.original_image = None
-        self.current_photo = None
 
         # --- Style ---
         self.style = ttk.Style(self.root)
@@ -159,27 +157,28 @@ class GUI:
             self.open_apod_window(self.data)
     
 
-    def resize_image(self, event = None):
-        if self.original_image is None:
+    def resize_image(self, image_canvas, image_state, _event = None):
+        original_image = image_state["original"]
+        if original_image is None:
             return
 
-        canvas_width = self.image_canvas.winfo_width()
-        canvas_height = self.image_canvas.winfo_height()
+        canvas_width = image_canvas.winfo_width()
+        canvas_height = image_canvas.winfo_height()
 
         if canvas_width <= 1 or canvas_height <= 1:
             return
 
-        display_image = self.original_image.copy()
+        display_image = original_image.copy()
         display_image.thumbnail(
             (canvas_width, canvas_height),
             Image.Resampling.LANCZOS
         )
 
         photo = ImageTk.PhotoImage(display_image)
-        self.image_reference["photo"] = photo
+        image_state["photo"] = photo
 
-        self.image_canvas.delete("all")
-        self.image_canvas.create_image(
+        image_canvas.delete("all")
+        image_canvas.create_image(
             canvas_width // 2,
             canvas_height // 2,
             image = photo,
@@ -188,57 +187,59 @@ class GUI:
 
 
     def open_apod_window(self, data: Data):
-        self.apod_window = tk.Toplevel(self.root)
-        self.apod_window.title("APOD")
-        self.apod_window.config(background = "black")
+        apod_window = tk.Toplevel(self.root)
+        apod_window.title("Daily Dose of Cosmos")
+        apod_window.config(background = "black")
         is_image = data["media_type"] == "image"
 
         # --- Title ---
-        self.title_label = ttk.Label(
-            self.apod_window,
+        title_label = ttk.Label(
+            apod_window,
             text = data["title"],
             font = ("Arial", 16, "bold"),
             background = "black",
             foreground = "white"
         )
-        self.title_label.pack(padx = 20, pady = (20, 5))
+        title_label.pack(padx = 20, pady = (20, 5))
 
         # --- Date ---
-        self.date_label = ttk.Label(
-            self.apod_window,
+        date_label = ttk.Label(
+            apod_window,
             text = data["date"],
             font = ("Arial", 12),
             background = "black",
             foreground = "white"
         )
-        self.date_label.pack(padx = 20, pady = 5)
+        date_label.pack(padx = 20, pady = 5)
 
         # --- Copyright ---
-        self.copyright_label = ttk.Label(
-            self.apod_window,
+        copyright_label = ttk.Label(
+            apod_window,
             text = f'Credit/Copyright: {data["copyright"]}',
             font = ("Arial", 8),
             background = "black",
             foreground = "white"
         )
-        self.copyright_label.pack(pady = 5)
+        copyright_label.pack(pady = 5)
 
         if is_image:
-            self.original_image = None
-            self.image_reference = {"photo": None}
-            self.apod_window.state("zoomed")
+            image_state = {"original": None, "photo": None}
+            apod_window.state("zoomed")
             # --- Image canvas ---
-            self.image_canvas = tk.Canvas(
-                self.apod_window, 
+            image_canvas = tk.Canvas(
+                apod_window,
                 background = "black", 
                 highlightthickness = 0
             )
-            self.image_canvas.pack(fill = "both", expand = True, padx = 10, pady = 10)
-            self.image_canvas.bind("<Configure>", self.resize_image)
+            image_canvas.pack(fill = "both", expand = True, padx = 10, pady = 10)
+            image_canvas.bind(
+                "<Configure>",
+                lambda event: self.resize_image(image_canvas, image_state, event)
+            )
         
         # --- Explanation ---
-        self.explanation_text = tk.Text(
-            self.apod_window,
+        explanation_text = tk.Text(
+            apod_window,
             wrap = "word",
             font = ("Arial", 10),
             background = "black",
@@ -246,12 +247,12 @@ class GUI:
             relief = "flat",
         )
         if is_image:
-            self.explanation_text.configure(height = 5)
+            explanation_text.configure(height = 5)
         else:
-            self.explanation_text.configure(height = 10)
-        self.explanation_text.pack(fill = "x", padx = 20, pady = (10, 20))
-        self.explanation_text.insert("1.0", data["explanation"])
-        self.explanation_text.config(state = "disabled")
+            explanation_text.configure(height = 10)
+        explanation_text.pack(fill = "x", padx = 20, pady = (10, 20))
+        explanation_text.insert("1.0", data["explanation"])
+        explanation_text.config(state = "disabled")
 
         try:
             if data["media_type"] == "image":
@@ -261,29 +262,29 @@ class GUI:
                     return
 
                 with Image.open(image_path) as image:
-                    self.original_image = image.copy()
+                    image_state["original"] = image.copy()
 
-                self.apod_window.after_idle(self.resize_image)
+                apod_window.after_idle(lambda: self.resize_image(image_canvas, image_state))
 
             elif data["media_type"] == "video":
-                self.apod_window.state("normal")
+                apod_window.state("normal")
 
                 video_label = ttk.Label(
-                    self.apod_window,
+                    apod_window,
                     text = "This APOD is a video",
                     font = ("Arial", 12, "bold"),
                     background = "black",
                     foreground = "white",
                 )
-                video_label.pack(before = self.explanation_text, padx = 20, pady = 10)
+                video_label.pack(before = explanation_text, padx = 20, pady = 10)
 
                 open_video_button = ttk.Button(
-                    self.apod_window,
+                    apod_window,
                     text = "Open video in browser",
                     command = lambda: webbrowser.open(data["url"]),
                     style = "apod.TButton"
                 )
-                open_video_button.pack(before = self.explanation_text, padx = 20, pady = 10)
+                open_video_button.pack(before = explanation_text, padx = 20, pady = 10)
 
             else:
                 messagebox.showinfo("Unsupported media type", f"Cannot display media type: {data['media_type']}")
