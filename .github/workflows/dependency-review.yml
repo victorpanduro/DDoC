@@ -1,13 +1,9 @@
 name: 'Dependency review'
 
 on:
-  push: 
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '00 00 * * 1'
-
+    
 permissions:
   contents: read
   pull-requests: write
