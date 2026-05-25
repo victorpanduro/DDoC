@@ -1,5 +1,7 @@
-<img src="icon/ddoc-icon.png" width="300" alt="DDoC logo">
-<img src="icon/apod-logo.webp" width="300" alt="APOD logo">
+<p align="center">
+  <img src="icon/ddoc-icon.png" width="300" alt="DDoC logo">
+  <img src="icon/apod-logo.webp" width="300" alt="APOD logo">
+</p>
 
 # Daily Dose of Cosmos
 
