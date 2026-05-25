@@ -1,0 +1,9 @@
+[MAIN]
+fail-under = 9.0
+persistent = no
+
+[MESSAGES CONTROL]
+disable =
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring

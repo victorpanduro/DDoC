@@ -1,6 +1,7 @@
 private/
 .env
-tmp/
+temp/
+data/
 __pycache__/
 *.pyc
 .venv/
