@@ -6,10 +6,9 @@ import utils
 from utils import Data
 
 class GUI:
-
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: Data = {}
-        utils.clear_tmp_images()
+        utils.clear_cache()
 
         self.root = tk.Tk()
         self.root.config(background = "black")
@@ -17,8 +16,9 @@ class GUI:
         self.root.focus_set()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.icon_photo = ImageTk.PhotoImage(Image.open(utils.ICON_PATH))
-        self.root.iconphoto(True, self.icon_photo)
+        if utils.ICON_PATH.is_file():
+            self.icon_photo = ImageTk.PhotoImage(Image.open(utils.ICON_PATH))
+            self.root.iconphoto(True, self.icon_photo)
 
         self.api_key_var = StringVar(value = utils.get_api_key())
         self.date_entry_var = StringVar(value = "")
@@ -105,12 +105,12 @@ class GUI:
         self.root.mainloop()
 
 
-    def on_close(self):
-        utils.clear_tmp_images()
+    def on_close(self) -> None:
+        utils.clear_cache()
         self.root.destroy()
 
 
-    def on_fetch_click(self):
+    def on_fetch_click(self) -> None:
         key = self.api_key_var.get().strip()
         if not key:
             messagebox.showerror("Missing API key", "Please enter your NASA API key.")
@@ -127,19 +127,19 @@ class GUI:
             )
             return
 
-        if not self.data or date != self.data["date"]:
-            try:
-                self.data = utils.fetch_and_parse_response_to_data(key, date)
-                if self.data is None or not self.data:
-                    return
-            except (ValueError, RuntimeError) as ex:
-                messagebox.showerror("Error", str(ex))
+        # TODO tilføj 'temp = hvis checkbox er tikket' check
+        try:
+            self.data = utils.fetch_and_parse_response_to_data(key, True, date)
+            if self.data is None or not self.data:
                 return
+        except (ValueError, RuntimeError) as ex:
+            messagebox.showerror("Error", str(ex))
+            return
 
-            self.open_apod_window(self.data)
+        self.open_apod_window(self.data)
 
 
-    def resize_image(self, image_canvas, image_state, _event = None):
+    def resize_image(self, image_canvas, image_state) -> None:
         original_image = image_state["original"]
         if original_image is None:
             return
@@ -168,7 +168,7 @@ class GUI:
         )
 
 
-    def open_apod_window(self, data: Data):
+    def open_apod_window(self, data: Data) -> None:
         apod_window = tk.Toplevel(self.root)
         apod_window.title("Daily Dose of Cosmos")
         apod_window.config(background = "black")
@@ -204,6 +204,7 @@ class GUI:
         if is_image:
             image_state = {"original": None, "photo": None}
             apod_window.state("zoomed")
+            apod_window.focus()
 
             image_canvas = tk.Canvas(
                 apod_window,
@@ -213,7 +214,7 @@ class GUI:
             image_canvas.pack(fill = "both", expand = True, padx = 10, pady = 10)
             image_canvas.bind(
                 "<Configure>",
-                lambda event: self.resize_image(image_canvas, image_state, event)
+                lambda resize: self.resize_image(image_canvas, image_state)
             )
 
         explanation_text = tk.Text(
