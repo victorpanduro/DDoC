@@ -119,7 +119,7 @@ def parse_response_to_cache(response: Response, cache: APODCache) -> APODCache:
                 url = json_data.get("hdurl") or json_data.get("url", ""),
                 media_type = json_data.get("media_type", "Unknown media type"),
                 copyright = remove_newline(
-                    json_data.get("copyright", "Unknown copyrighter")
+                    json_data.get("copyright", "This APOD is public domain")
                 )
             )
     except JSONDecodeError as ex:
