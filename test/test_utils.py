@@ -127,7 +127,7 @@ class UtilsCacheTests(unittest.TestCase):
         result = utils.fetch_apod_data("KEY", "2026-05-27", {}, session)
 
         self.assertEqual(result["title"], "Fresh APOD")
-        self.assertEqual(result["copyright"], "Unknown copyrighter")
+        self.assertEqual(result["copyright"], "This APOD is public domain")
         session.get.assert_called_once()
         args, kwargs = session.get.call_args
         self.assertEqual(args, ("https://api.nasa.gov/planetary/apod",))
